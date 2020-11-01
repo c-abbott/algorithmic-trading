@@ -1,52 +1,94 @@
-def generate_stock_price(days, initial_price, volatility):
+import numpy as np
+
+# Make a function for the news
+def get_news_drifts(chance, volatility, rng, drift_time): 
+    '''
+    Simulate the news with %chance
+
+    Parameters:
+        chance, float: 
+            Probability of a news event occuring on a particular day.
+                
+        volatility, float:
+            Represents the volatility of a stock.
+        
+        rng, NumPy random generator object:
+            Provides control over the stochastic nature of a news event.
+        
+        drift_time, tuple:
+            Lower and upperbound for samples of news events durations.
+    
+    Returns:
+        drifts, ndarray:
+            A variable size numpy array of stock price drifts. Size
+            determined int sampled between low and high provided
+            by the drift_time variable.
+    '''
+    news_today = rng.choice([0, 1], p=[1 - chance, chance])
+    if news_today:
+        # Calculate m and drift
+        m = rng.normal(loc=0, scale=2)
+        drift = m * volatility
+        # Randomly choose the duration
+        duration = rng.integers(drift_time[0], drift_time[1])
+        # Return drifts due to news event
+        drifts = [drift for i in range(duration)]
+        return drifts
+    else:
+        # If no news return nothing
+        return np.zeros(duration) 
+
+def generate_stock_price(days, initial_price, volatility, seed):
     '''
     Generates daily closing share prices for a company,
     for a given number of days.
+
+    Parameters:
+        days, int:
+            Number of days stock prices are simulated for.
+        
+        initial_price, float:
+            Initial price of stock on day 0.
+        
+        volatility, float:
+            Volatility of a stock.
+        
+        seed, int:
+            Seed for NumPy random number generator.
+    
+    Returns:
+        stock_prices, ndarray:
+            Array of size days containinf simulated stock prices
+            for each day.
     '''
-    # Set stock_prices to be a zero array with length days
+    # Storage arrays
     stock_prices = np.zeros(days)
-    # Set stock_prices in row 0 to be initial_price
+    total_drift = np.zeros(days + 14)
+
+    # Set initial stock prices
     stock_prices[0] = initial_price
-    # Set total_drift to be a zero array with length days
-    totalDrift= np.zeros(days)
-    # Set up the default_rng from Numpy
-    rng = np.random.default_rng()
-    # Loop over a range(1, days)
+
+    # Define random number generator
+    rng = np.random.default_rng(seed = seed)
+
+    # Begin simulating stock prices
     for day in range(1, days):
-        # Get the random normal increment
-        inc = rng.normal()
-        # Add stock_prices[day-1] to inc to get NewPriceToday
-        NewPriceToday=stock_price[day-1]+inc
-        # Make a function for the news
-        def news(chance, volatility):
-            '''
-            Simulate the news with %chance
-            '''
-            # Choose whether there's news today
-            news_today = rng.choice([0,1], p=chance)
-            if news_today:
-                # Calculate m and drift
-                m=rng.normal(0,0.3)
-                drift = m * volatility
-                # Randomly choose the duration
-                duration = rng.integers(7,7*12)
-                final = np.zeros(duration)
-                for i in range(duration):
-                    final[i] = drift
-                return final
-            else:
-                return np.zeros(duration)
-        # Get the drift from the news
-        d = news(1, volatility)
-        # Get the duration
-        duration = len(d)
-        # Add the drift to the next days
-        totalDrift[day:day+duration] =d
-        # Add today's drift to today's price
-        NewPriceToday+=totalDrift[day]
-        # Set stock_prices[day] to NewPriceToday or to NaN if it's negative
-        if NewPriceToday <=0:
+        # Update price due to volatility of stock
+        inc = rng.normal(loc = 0, scale = volatility)
+        new_price_today = stock_prices[day-1] + inc
+
+        # Simulate price drifts due to news event
+        drifts = get_news_drifts(1, volatility, rng=rng, drift_time=(3, 15))
+        duration = len(drifts)
+        total_drift[day:day+duration] += drifts
+
+        # Update price due to news event
+        new_price_today += total_drift[day]
+
+        # Update overall stock price
+        if new_price_today <= 0:
             stock_prices[day] = np.nan
         else:
-            stock_prices[day] = NewPriceToday
+            stock_prices[day] = new_price_today
+
     return stock_prices
