@@ -1,4 +1,5 @@
 import numpy as np
+from os import path
 
 def get_news_drifts(chance, volatility, rng, drift_time): 
     '''
@@ -39,7 +40,7 @@ def get_news_drifts(chance, volatility, rng, drift_time):
     else:
         return np.zeros([0]) 
 
-def generate_stock_price(days, initial_price, volatility, seed=42):
+def generate_stock_price(days, initial_price, volatility, seed=None):
     '''
     Generates daily closing share prices for a company,
     for a given number of days.
@@ -75,8 +76,8 @@ def generate_stock_price(days, initial_price, volatility, seed=42):
     # Begin simulating stock prices
     for day in range(1, days):
         # Update price due to volatility of stock
-        inc = rng.normal(loc = 0, scale = volatility)
-        new_price_today = stock_prices[day-1] + inc
+        daily_inc = rng.normal(loc = 0, scale = volatility)
+        new_price_today = stock_prices[day-1] + daily_inc
 
         # Simulate price drifts due to news event
         drifts = get_news_drifts(chance=0.5, volatility=volatility, rng=rng, drift_time=(3, 15))
@@ -93,3 +94,91 @@ def generate_stock_price(days, initial_price, volatility, seed=42):
             stock_prices[day] = new_price_today
 
     return stock_prices
+
+def get_data(method='read', initial_price=None, volatility=None, FILE_NAME='stock_data_5y.txt'):
+    '''
+    Generates or reads simulation data for one or more stocks over 5 years,
+    given their initial share price and volatility.
+    
+    Input:
+        method (str): either 'generate' or 'read' (default 'read').
+            If method is 'generate', use generate_stock_price() to generate
+                the data from scratch.
+            If method is 'read', use Numpy's loadtxt() to read the data
+                from the file stock_data_5y.txt.
+            
+        initial_price (list): list of initial prices for each stock (default None)
+            If method is 'generate', use these initial prices to generate the data.
+            If method is 'read', choose the column in stock_data_5y.txt with the closest
+                starting price to each value in the list, and display an appropriate message.
+        
+        volatility (list): list of volatilities for each stock (default None).
+            If method is 'generate', use these volatilities to generate the data.
+            If method is 'read', choose the column in stock_data_5y.txt with the closest
+                volatility to each value in the list, and display an appropriate message.
+        
+        FILE_NAME (string): string holding the relative filename for stock data to simulate (default 'stock_data_5y.txt')
+            If method is 'generate', the variable will not be used.
+            If method is 'read',
+
+        If no arguments are specified, read price data from the whole file.
+        
+    Output:
+        sim_data (ndarray): NumPy array with N columns, containing the price data
+            for the required N stocks each day over 5 years.
+    '''
+    # Simulate for 5 years discounting leap years
+    days = 365 * 5
+
+    if method == 'generate':
+        assert initial_price != None, "Please specify the initial price for each stock."
+        assert volatility != None, "Please specify the volatility for each stock."
+    
+        N = len(initial_price)
+        # Storage array
+        sim_data = np.zeros([days, N])
+        for i in range(N):
+            sim_data[:, i] = generate_stock_price(days, initial_price[i], volatility[i], seed=42)
+        return sim_data
+
+    # Reading data in from file
+    else:
+        BASE_PATH = path.dirname(__file__)
+        FILE_PATH = path.abspath(path.join(BASE_PATH, "..", FILE_NAME))
+        data_array = np.loadtxt(FILE_PATH)
+        file_vols = data_array[0, :]
+        file_ips = data_array[1, :]
+        
+        N = data_array.shape[1]
+        sim_data = np.zeros([days, N])
+    
+
+        if initial_price != None and volatility != None:
+            N = len(initial_price)
+            sim_data = np.zeros([days, N])
+            col_idxs = []
+            for i in range(len(initial_price)):
+                diffs = np.abs(file_ips - initial_price[i])
+                idx = np.argmin(diffs)
+                col_idxs.append(idx)
+            sim_data = data_array[:, col_idxs]
+            
+            new_ips = list(sim_data[1, :])
+            new_vols = list(data_array[0, col_idxs])
+            
+            print(f'Found data with initial prices {new_ips} and volatilities {new_vols}. ' \
+                    'Input argument volatility ignored.')
+            return sim_data
+        
+        elif volatility 
+            
+
+
+
+
+
+        
+if __name__ == "__main__":
+    get_data(method='read', initial_price=[210, 58], volatility=[2.4, 2.3])
+
+
