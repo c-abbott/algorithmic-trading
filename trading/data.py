@@ -95,6 +95,14 @@ def generate_stock_price(days, initial_price, volatility, seed=None):
 
     return stock_prices
 
+def get_idxs(items, file_vals):
+    col_idxs = []
+    for i in range(len(items)):
+        diffs = np.abs(file_vals - items[i])
+        idx = np.argmin(diffs)
+        col_idxs.append(idx)
+    return col_idxs
+
 def get_data(method='read', initial_price=None, volatility=None, FILE_NAME='stock_data_5y.txt'):
     '''
     Generates or reads simulation data for one or more stocks over 5 years,
@@ -149,36 +157,49 @@ def get_data(method='read', initial_price=None, volatility=None, FILE_NAME='stoc
         file_vols = data_array[0, :]
         file_ips = data_array[1, :]
         
-        N = data_array.shape[1]
-        sim_data = np.zeros([days, N])
-    
+        if initial_price == None and volatility == None:
+            return data_array
 
-        if initial_price != None and volatility != None:
+        elif initial_price != None and volatility == None:
             N = len(initial_price)
             sim_data = np.zeros([days, N])
-            col_idxs = []
-            for i in range(len(initial_price)):
-                diffs = np.abs(file_ips - initial_price[i])
-                idx = np.argmin(diffs)
-                col_idxs.append(idx)
+            col_idxs = get_idxs(initial_price, file_ips)
+            sim_data = data_array[:, col_idxs]
+            new_ips = list(sim_data[1, :])
+            new_vols = list(data_array[0, col_idxs])
+            
+            print(f'Found data with initial prices {new_ips} and volatilities {new_vols}.')
+            return sim_data
+        
+        elif initial_price == None and volatility != None:
+            N = len(volatility)
+            sim_data = np.zeros([days, N])
+            col_idxs = get_idxs(volatility, file_vols)
             sim_data = data_array[:, col_idxs]
             
             new_ips = list(sim_data[1, :])
             new_vols = list(data_array[0, col_idxs])
             
+            print(f'Found data with initial prices {new_ips} and volatilities {new_vols}.')
+            return sim_data
+
+        elif initial_price != None and volatility != None:
+            N = len(initial_price)
+            sim_data = np.zeros([days, N])
+            col_idxs = get_idxs(initial_price, file_ips)
+            sim_data = data_array[:, col_idxs]
+            new_ips = list(sim_data[1, :])
+            new_vols = list(data_array[0, col_idxs])
             print(f'Found data with initial prices {new_ips} and volatilities {new_vols}. ' \
                     'Input argument volatility ignored.')
             return sim_data
+    
         
-        elif volatility 
-            
-
-
-
-
-
         
 if __name__ == "__main__":
     get_data(method='read', initial_price=[210, 58], volatility=[2.4, 2.3])
+    get_data(method='read', initial_price=[210, 58])
+    get_data(volatility=[5.1])
+
 
 
