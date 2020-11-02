@@ -1,9 +1,8 @@
 import numpy as np
 
-# Make a function for the news
 def get_news_drifts(chance, volatility, rng, drift_time): 
     '''
-    Simulate the news with %chance
+    Simulate the news with %chance.
 
     Parameters:
         chance, float: 
@@ -16,7 +15,7 @@ def get_news_drifts(chance, volatility, rng, drift_time):
             Provides control over the stochastic nature of a news event.
         
         drift_time, tuple:
-            Lower and upperbound for samples of news events durations.
+            Lower and upperbound for samples for news event durations.
     
     Returns:
         drifts, ndarray:
@@ -25,12 +24,15 @@ def get_news_drifts(chance, volatility, rng, drift_time):
             by the drift_time variable.
     '''
     news_today = rng.choice([0, 1], p=[1 - chance, chance])
+
     if news_today:
         # Calculate m and drift
         m = rng.normal(loc=0, scale=2)
         drift = m * volatility
+
         # Randomly choose the duration
         duration = rng.integers(drift_time[0], drift_time[1])
+
         # Return drifts due to news event
         drifts = [drift for i in range(duration)]
         return drifts
@@ -57,12 +59,12 @@ def generate_stock_price(days, initial_price, volatility, seed=42):
     
     Returns:
         stock_prices, ndarray:
-            Array of size days containinf simulated stock prices
+            Array of size days containing simulated stock prices
             for each day.
     '''
     # Storage arrays
     stock_prices = np.zeros(days)
-    total_drift = np.zeros(days + 14)
+    total_drift = np.zeros(days + 100) # size overcompensation for robustness
 
     # Set initial stock prices
     stock_prices[0] = initial_price
