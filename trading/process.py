@@ -1,5 +1,6 @@
 # Functions to process transactions.
 import numpy as np
+import csv
 
 def log_transaction(transaction_type, date, stock, number_of_shares, price, fees, ledger_file):
     '''
@@ -26,9 +27,28 @@ def log_transaction(transaction_type, date, stock, number_of_shares, price, fees
         buy,5,2,10,100.00,-1050.00
             >>> log_transaction('buy', 5, 2, 10, 100, 50, 'ledger.txt')
     '''
-    pass
+    # Determining money gained or spent
+    delta_money = 0
+    if transaction_type == 'buy':
+        delta_money  -= number_of_shares * price + fees
+    elif transaction_type == 'sell':
+        delta_money += number_of_shares * price + fees
 
+    # Info to written to file
+    transaction_info = [transaction_type, date, stock, number_of_shares, price, delta_money]
 
+    # Coverting items to strings and 2 d.p. so they can be written to file
+    for item in transaction_info:
+        if type(item) == str:
+            pass
+        else:
+            item = str(round(item, 2))
+
+    # File writer
+    with open(ledger_file, 'a+') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(transaction_info)
+        
 def buy(date, stock, available_capital, stock_prices, fees, portfolio, ledger_file):
     '''
     Buy shares of a given stock, with a certain amount of money available.
@@ -94,3 +114,7 @@ def create_portfolio(available_amounts, stock_prices, fees):
         >>> portfolio = create_portfolio([1000] * N, sim_data, 40)
     '''
     pass
+
+if __name__ == "__main__":
+    log_transaction('buy', 5, 2, 10, 100, 50, 'ledger.txt')
+    log_transaction('sell', 3, 5, 6, 7, 10, 'ledger.txt')
