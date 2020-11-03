@@ -1,7 +1,7 @@
-# Functions to process transactions.
 import numpy as np
 import csv
 
+# Functions to process transactions.
 def log_transaction(transaction_type, date, stock, number_of_shares, price, fees, ledger_file):
     '''
     Record a transaction in the file ledger_file. If the file doesn't exist, create it.
@@ -65,20 +65,13 @@ def buy(date, stock, available_capital, stock_prices, fees, portfolio, ledger_fi
         ledger_file (str): path to the ledger file
     
     Output: None
-
-    Example:
-        Spend at most 1000 to buy shares of stock 7 on day 21, with fees 30:
-            >>> buy(21, 7, 1000, sim_data, 30, portfolio)
     '''
     # Retrieve stock price
     price = stock_prices[int(date), int(stock)]
-
     # Buy as many shares as possible
     number_of_shares = np.floor( (available_capital - fees) / price )
-
     # Update portfolio
     portfolio[stock] += number_of_shares
-
     # Log transaction
     log_transaction('buy', date, stock, number_of_shares, price, fees, ledger_file)
 
@@ -96,18 +89,12 @@ def sell(date, stock, stock_prices, fees, portfolio, ledger_file):
         ledger_file (str): path to the ledger file
     
     Output: None
-
-    Example:
-        To sell all our shares of stock 1 on day 8, with fees 20:
-            >>> sell(8, 1, sim_data, 20, portfolio)
     '''
     # Retrieve stock price
     price = stock_prices[int(date), int(stock)]
-
-    # Update portfolio
+    # Sell all shares of stock and update portfolio
     number_of_shares = portfolio[stock]
     portfolio[stock] = 0
-
     # Log transaction
     log_transaction('sell', date, stock, number_of_shares, price, fees, ledger_file)
 
@@ -124,11 +111,14 @@ def create_portfolio(available_amounts, stock_prices, fees):
     
     Output:
         portfolio (list): our initial portfolio
-
-    Example:
-        Spend 1000 for each stock (including 40 fees for each purchase):
-        >>> N = sim_data.shape[1]
-        >>> portfolio = create_portfolio([1000] * N, sim_data, 40)
     '''
-    pass
-
+    # Define number of stocks, N, and date
+    N = stock_prices.shape[1]
+    date = 0
+    # Create portfolio
+    portfolio = np.zeros(N).tolist()
+    # Populating day 0 portfolio
+    for i in range(N):
+        # iterator i represents the stock to buy
+        buy(date, i, available_amounts[i], stock_prices, fees, portfolio, 'ledger.txt')
+    return portfolio
