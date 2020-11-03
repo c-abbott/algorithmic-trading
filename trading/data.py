@@ -96,10 +96,23 @@ def generate_stock_price(days, initial_price, volatility, seed=None):
     return stock_prices
 
 def get_idxs(items, file_vals):
-    col_idxs = []
+    '''
+        Helper function for get_data() to find relevant columns of
+        stock_data_5y.txt to simulate.
+
+        Parameters:
+            items (list): Either initial_price or volatility list to iterate over
+
+            file_vals (list): the list of initial values read from the file
+
+        Returns:
+            col_idxs (list): List of column indices to extract relevant columns
+                                from the data file
+    '''
+    col_idxs = [] # Storage
     for i in range(len(items)):
-        diffs = np.abs(file_vals - items[i])
-        idx = np.argmin(diffs)
+        diffs = np.abs(file_vals - items[i]) # Comparison array
+        idx = np.argmin(diffs) # Find idx where given value matches the file value
         col_idxs.append(idx)
     return col_idxs
 
@@ -139,67 +152,86 @@ def get_data(method='read', initial_price=None, volatility=None, FILE_NAME='stoc
     days = 365 * 5
 
     if method == 'generate':
-        assert initial_price != None, "Please specify the initial price for each stock."
-        assert volatility != None, "Please specify the volatility for each stock."
-    
-        N = len(initial_price)
-        # Storage array
-        sim_data = np.zeros([days, N])
-        for i in range(N):
-            sim_data[:, i] = generate_stock_price(days, initial_price[i], volatility[i], seed=42)
-        return sim_data
+        #assert initial_price != None, "Please specify the initial price for each stock."
+        #assert volatility != None, "Please specify the volatility for each stock."
+        
+        # Ensuring valid input
+        if initial_price != None and volatility == None:
+            print(f'Please specify the volatiliy for each stock.')
+            return None
+        elif initial_price == None and volatility != None:
+            print(f'Please specify the initial price for each stock.')
+            return None
+        
+        elif initial_price != None and volatility != None:
+            # Defining number of stocks to simulate
+            N = len(initial_price)
+            sim_data = np.zeros([days, N])
+            
+            # Populating array with randomly generated stock prices
+            for i in range(N):
+                sim_data[:, i] = generate_stock_price(days, initial_price[i], volatility[i], seed=42)
+            return sim_data
 
-    # Reading data in from file
-    else:
+    
+    elif method == 'read':
+        # Locating relevant file
         BASE_PATH = path.dirname(__file__)
         FILE_PATH = path.abspath(path.join(BASE_PATH, "..", FILE_NAME))
+
+        # Storing data from file in array
         data_array = np.loadtxt(FILE_PATH)
+
+        # Storing the inital volatilities and inital prices
         file_vols = data_array[0, :]
         file_ips = data_array[1, :]
         
+        # No arguments == return all data
         if initial_price == None and volatility == None:
-            return data_array
+            return data_array[1:]
 
         elif initial_price != None and volatility == None:
+            # Defining number of stocks to simulate
             N = len(initial_price)
             sim_data = np.zeros([days, N])
+
+            # Extracting closest matching column indices
             col_idxs = get_idxs(initial_price, file_ips)
-            sim_data = data_array[:, col_idxs]
+            # Extracting relevant columns from file data
+            sim_data = data_array[1:, col_idxs]
+            
             new_ips = list(sim_data[1, :])
             new_vols = list(data_array[0, col_idxs])
-            
             print(f'Found data with initial prices {new_ips} and volatilities {new_vols}.')
             return sim_data
         
         elif initial_price == None and volatility != None:
+            # Defining number of stocks to simulate
             N = len(volatility)
             sim_data = np.zeros([days, N])
+
+            # Extracting closest matching column indices
             col_idxs = get_idxs(volatility, file_vols)
-            sim_data = data_array[:, col_idxs]
+            # Extracting relevant columns from file data
+            sim_data = data_array[1:, col_idxs]
             
             new_ips = list(sim_data[1, :])
             new_vols = list(data_array[0, col_idxs])
-            
             print(f'Found data with initial prices {new_ips} and volatilities {new_vols}.')
             return sim_data
 
         elif initial_price != None and volatility != None:
+            # Defining number of stocks to simulate
             N = len(initial_price)
             sim_data = np.zeros([days, N])
+
+            # Extracting closest matching column indices
             col_idxs = get_idxs(initial_price, file_ips)
-            sim_data = data_array[:, col_idxs]
+            # Extracting relevant columns from file data
+            sim_data = data_array[1:, col_idxs]
+
             new_ips = list(sim_data[1, :])
             new_vols = list(data_array[0, col_idxs])
             print(f'Found data with initial prices {new_ips} and volatilities {new_vols}. ' \
                     'Input argument volatility ignored.')
             return sim_data
-    
-        
-        
-if __name__ == "__main__":
-    get_data(method='read', initial_price=[210, 58], volatility=[2.4, 2.3])
-    get_data(method='read', initial_price=[210, 58])
-    get_data(volatility=[5.1])
-
-
-
