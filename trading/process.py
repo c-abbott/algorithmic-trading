@@ -48,7 +48,7 @@ def log_transaction(transaction_type, date, stock, number_of_shares, price, fees
     with open(ledger_file, 'a+') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(transaction_info)
-        
+
 def buy(date, stock, available_capital, stock_prices, fees, portfolio, ledger_file):
     '''
     Buy shares of a given stock, with a certain amount of money available.
@@ -70,8 +70,17 @@ def buy(date, stock, available_capital, stock_prices, fees, portfolio, ledger_fi
         Spend at most 1000 to buy shares of stock 7 on day 21, with fees 30:
             >>> buy(21, 7, 1000, sim_data, 30, portfolio)
     '''
-    pass
+    # Retrieve stock price
+    price = stock_prices[int(date), int(stock)]
 
+    # Buy as many shares as possible
+    number_of_shares = np.floor( (available_capital - fees) / price )
+
+    # Update portfolio
+    portfolio[stock] += number_of_shares
+
+    # Log transaction
+    log_transaction('buy', date, stock, number_of_shares, price, fees, ledger_file)
 
 def sell(date, stock, stock_prices, fees, portfolio, ledger_file):
     '''
@@ -92,7 +101,15 @@ def sell(date, stock, stock_prices, fees, portfolio, ledger_file):
         To sell all our shares of stock 1 on day 8, with fees 20:
             >>> sell(8, 1, sim_data, 20, portfolio)
     '''
-    pass
+    # Retrieve stock price
+    price = stock_prices[int(date), int(stock)]
+
+    # Update portfolio
+    number_of_shares = portfolio[stock]
+    portfolio[stock] = 0
+
+    # Log transaction
+    log_transaction('sell', date, stock, number_of_shares, price, fees, ledger_file)
 
 
 def create_portfolio(available_amounts, stock_prices, fees):
@@ -115,6 +132,3 @@ def create_portfolio(available_amounts, stock_prices, fees):
     '''
     pass
 
-if __name__ == "__main__":
-    log_transaction('buy', 5, 2, 10, 100, 50, 'ledger.txt')
-    log_transaction('sell', 3, 5, 6, 7, 10, 'ledger.txt')
