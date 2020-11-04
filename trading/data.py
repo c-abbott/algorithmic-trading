@@ -40,7 +40,7 @@ def get_news_drifts(chance, volatility, rng, drift_time):
     else:
         return np.zeros([0]) 
 
-def generate_stock_price(days, initial_price, volatility, seed=None):
+def generate_stock_price(days, initial_price, volatility, chance=0.01, seed=None):
     '''
     Generates daily closing share prices for a company,
     for a given number of days.
@@ -54,6 +54,9 @@ def generate_stock_price(days, initial_price, volatility, seed=None):
         
         volatility, float:
             Volatility of a stock.
+        
+        chance float (optional: default = 0.01):
+            Probability of news event occuring
         
         seed, int (optional):
             Seed for NumPy random number generator.
@@ -80,7 +83,7 @@ def generate_stock_price(days, initial_price, volatility, seed=None):
         new_price_today = stock_prices[day-1] + daily_inc
 
         # Simulate price drifts due to news event
-        drifts = get_news_drifts(chance=0.5, volatility=volatility, rng=rng, drift_time=(3, 15))
+        drifts = get_news_drifts(chance=0.01, volatility=volatility, rng=rng, drift_time=(3, 15))
         duration = len(drifts)
         total_drift[day:day+duration] += drifts
 
