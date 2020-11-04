@@ -14,7 +14,21 @@ def moving_average(stock_price, n=7, weights=[]):
     Output:
         ma (ndarray): the n-day (possibly weighted) moving average of the share price over time.
     '''
-    pass
+    if len(weights) == 0:
+        # Calculating unweighted moving average
+        sample = stock_price[-n:]
+        ma = np.mean(sample)
+        return ma
+    else:
+        # Ensure valid input
+        assert len(weights) == n, "Please provide a weight for every element in moving average calculation"
+
+        # Nomalize weights and weighted moving average
+        weights = weights / np.sum(weights)
+        weighted_sample = np.multiply(stock_price[-n:], weights)
+        ma = np.mean(weighted_sample)
+        return ma
+
 
 def oscillator(stock_price, n=7, osc_type='stochastic'):
     '''
