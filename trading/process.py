@@ -20,12 +20,6 @@ def log_transaction(transaction_type, date, stock, number_of_shares, price, fees
         This should also include the total amount of money spent (negative) or earned (positive)
         in the transaction, including fees, at the end of the line.
         All amounts should be reported with 2 decimal digits.
-
-    Example:
-        Log a purchase of 10 shares for stock number 2, on day 5. Share price is 100, fees are 50.
-        Writes the following line in 'ledger.txt':
-        buy,5,2,10,100.00,-1050.00
-            >>> log_transaction('buy', 5, 2, 10, 100, 50, 'ledger.txt')
     '''
     # Determining money gained or spent
     delta_money = 0
@@ -99,7 +93,7 @@ def sell(date, stock, stock_prices, fees, portfolio, ledger_file):
     log_transaction('sell', date, stock, number_of_shares, price, fees, ledger_file)
 
 
-def create_portfolio(available_amounts, stock_prices, fees):
+def create_portfolio(available_amounts, stock_prices, fees, ledger_file):
     '''
     Create a portfolio by buying a given number of shares of each stock.
     
@@ -108,6 +102,7 @@ def create_portfolio(available_amounts, stock_prices, fees):
             purchase for each stock (this should cover fees)
         stock_prices (ndarray): the stock price data
         fees (float): transaction fees (fixed amount per transaction)
+        ledger_file (str): path to the ledger file
     
     Output:
         portfolio (list): our initial portfolio
@@ -120,5 +115,5 @@ def create_portfolio(available_amounts, stock_prices, fees):
     # Populating day 0 portfolio
     for i in range(N):
         # iterator i represents the stock to buy
-        buy(date, i, available_amounts[i], stock_prices, fees, portfolio, 'ledger.txt')
+        buy(date, i, available_amounts[i], stock_prices, fees, portfolio, ledger_file)
     return portfolio
