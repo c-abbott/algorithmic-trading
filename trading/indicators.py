@@ -89,7 +89,6 @@ def oscillator(stock_price, n=7, osc_type='stochastic'):
             RS = plus_avg / neg_avg
             RSI = -1/(1 + RS) + 1
             osc[i] = RSI
-        
         return osc[::-1]
 
 
