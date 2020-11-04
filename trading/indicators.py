@@ -16,27 +16,29 @@ def moving_average(stock_price, n=7, weights=[]):
     '''
     # Reversing arrays for ease of iteration
     rev_stock_price = stock_price[::-1]
-    rev_sample = rev_stock_price[n]
+    rev_sample = rev_stock_price[:n]
+    n_eff = rev_sample.size
     
     # Storage
-    ma = np.zeros(shape=(n, ))
+    ma = np.zeros(shape=(n_eff, ))
 
-    if n > rev_sample.size:
-        print(f'Warning: the first {rev_sample.size} elements of the ma array returned are a' + \
-                f'{rev_sample.size}-day moving average and not a {n}-day moving average')
+    if n > n_eff:
+        print(f'Warning: the first {n_eff} elements of the ma array returned are a' + \
+                f'{n_eff}-day moving average and not a {n}-day moving average')
 
     # Unweighted moving average
     if len(weights) == 0:
-        for i in range(rev_sample.size):
+        for i in range(n_eff):
             ma[i] = np.mean(rev_stock_price[i:i+n])
         return ma[::-1]
     else:
         # Ensure valid input
         assert len(weights) == n, "Please provide a weight for every element in moving average calculation"
 
-        # Nomalize weights and calculate weighted moving average
+        # Nomalize and reverse weights 
         weights = np.array(weights)[::-1] / np.sum(weights)
-        for i in range(rev_sample.size):
+        # Calculate moving average
+        for i in range(n_eff):
             ma[i] = np.mean(stock_price[::-1][i:i+n])  * weights[i]
         return ma[::-1]
 
@@ -54,39 +56,41 @@ def oscillator(stock_price, n=7, osc_type='stochastic'):
     Output:
         osc (ndarray): the oscillator level with period $n$ for the stock over time.
     '''
-     # Get data from past n days
-    sample = stock_price[-n:]
+    # Reversing arrays for ease of iteration
+    rev_stock_price = stock_price[::-1]
+    rev_sample = rev_stock_price[:n]
+    n_eff = rev_sample.size
 
-    if sample.size < n:
-        print(f'Warning: ')
+    # Storage
+    osc = np.zeros(shape=(n_eff, ))
 
     if osc_type == 'stochastic':
-        # Find low and high prices
-        high_price = np.max(sample)
-        low_price = np.min(sample)
-        # Compute ingredients for osc
-        delta = sample[-1] - low_price
-        delta_max = high_price - low_price
-        # Return stochastic oscillator
-        return np.ones(shape=(n, )) * (delta / delta_max)
+        for i in range(n_eff):
+            # Find low and high prices
+            high_price = np.max(rev_stock_price[i:i+n])
+            low_price = np.min(rev_stock_price[i:i+n])
+            # Compute ingredients for osc
+            delta = rev_stock_price[i:i+n][0] - low_price
+            delta_max = high_price - low_price
+            # Return stochastic oscillator
+            osc[i] = delta / delta_max
+        return osc[::-1]
     
     elif osc_type == 'RSI':
-        # Storage
-        price_diffs = []
-
+        price_diffs_arr = np.zeros(shape = (n_eff, n))
         # Get price differences over past n days
-        rev_sample = sample[::-1]
-        for i in range(sample.size - 1):
-            price_diffs.append(rev_sample[i] - rev_sample[i+1])
-
-        # Find +ve and -ve price diffs and return RSI
-        plus_idxs = np.where(price_diffs > 0)[0] # Do not include 0 in RSI calculation
-        neg_idxs = np.where(price_diffs < 0)[0]
-        plus_avg = np.mean(price_diffs[plus_idxs])
-        neg_avg = np.abs(np.mean(price_diffs[neg_idxs]))
-        RS = plus_avg / neg_avg
-        RSI = -1/(1 + RS) + 1
-        return np.ones(shape=(n, )) * RSI
+        for i in range(n_eff):
+            price_diffs_arr[i, :] = rev_stock_price[i:i+n] - rev_stock_price[i+1:i+1+n]
+            # Find +ve and -ve price diffs and return RSI
+            plus_idxs = np.where(price_diffs_arr[i, :] > 0)[0] # Do not include 0 in RSI calculation
+            neg_idxs = np.where(price_diffs_arr[i, :] < 0)[0]
+            plus_avg = np.mean(price_diffs_arr[i, :][plus_idxs])
+            neg_avg = np.abs(np.mean(price_diffs_arr[i, :][neg_idxs]))
+            RS = plus_avg / neg_avg
+            RSI = -1/(1 + RS) + 1
+            osc[i] = RSI
+        
+        return osc[::-1]
 
 
 
