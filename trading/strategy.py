@@ -66,7 +66,7 @@ def random(stock_prices, period=7, amount=5000, fees=20, ledger='ledger_random.t
 
 def crossing_averages(stock_prices, sma_period=200, fma_period=50, amount=5000, fees=20, ledger='ledger_cross.txt'):
     '''
-    Algorithmic trading strategy based of crossing of the slow moving average (SMA) and fast
+    Algorithmic trading strategy based on the crossing of the slow moving average (SMA) and fast
     moving average (FMA).
         - When the FMA crosses the SMA from below we buy shares.
         - When the FMA crosses the SMA from above we sell shares
@@ -113,8 +113,72 @@ def crossing_averages(stock_prices, sma_period=200, fma_period=50, amount=5000, 
     # Sell final day stock
     sell_all_stock(stock_prices, fees, portfolio, ledger)
 
+
+def momentum(stock_prices, osc_type='RSI', mom_period=7, cooldown_period=7, amount=5000, fees=20, ledger='ledger_mom.txt'):
+    '''
+    Algorithmic trading strategy based on the use of oscillators.
+
+    Input:
+        stock_prices (ndarray): the stock price data
+        osc_type (str, default RSI): oscillator to use (RSI or stochastic)
+        mom_period (int, default 7): number of days used to calculate oscillator
+        cooldown_period (int, default 7): number of days to wait between actions
+        amount (float, default 5000): how much we spend on each purchase (must cover fees)
+        fees (float, default 20): transaction fees
+        ledger (str): path to the ledger file
+
+    Output: 
+        None
+    '''
+    # Number of stocks simulated
+    N = int(stock_prices.shape[1])
+    # Create day 0 portfolio
+    portfolio = proc.create_portfolio(np.ones(N)*amount, stock_prices, fees, ledger)
+
+    if osc_type == 'RSI' or  osc_type == 'rsi':
+        for i in range(N):
+            # Calculate rsis for each stock 
+            rsis = indi.oscillator(stock_prices[:, i], n=mom_period, osc_type=osc_type)
+            # Determine which days to buy
+            buy_days = np.where(rsis < 0.25)[0]
+            buy_cooldown = np.diff(buy_days)
+            buy_days = np.where(buy_cooldown >= cooldown_period)[0] 
+            # Determine which days to sell
+            sell_days = np.where(rsis >= 0.75)[0]
+            sell_cooldown = np.diff(sell_days)
+            sell_days = np.where(sell_cooldown >= cooldown_period)[0] 
+            # Perform buying 
+            for j in range(len(buy_days)):
+                proc.buy(buy_days[j], i, amount, stock_prices, fees, portfolio, ledger)
+            # Peform selling
+            for k in range(len(sell_days)):
+                proc.sell(sell_days[k], i, stock_prices, fees, portfolio, ledger)
         
+        # Sell all stock on final day
+        sell_all_stock(stock_prices, fees, portfolio, ledger)
+
+    elif osc_type == 'stochastic':
+        for i in range(N):
+            # Calculate rsis for each stock 
+            inds = indi.oscillator(stock_prices[:, i], n=mom_period, osc_type=osc_type)
+            # Determine which days to buy
+            buy_days = np.where(inds < 0.25)[0]
+            buy_cooldown = np.diff(buy_days)
+            buy_days = np.where(buy_cooldown >= cooldown_period)[0] 
+            # Determine which days to sell
+            sell_days = np.where(inds >= 0.75)[0]
+            sell_cooldown = np.diff(sell_days)
+            sell_days = np.where(sell_cooldown >= cooldown_period)[0] 
+            # Perform buying 
+            for j in range(len(buy_days)):
+                proc.buy(buy_days[j], i, amount, stock_prices, fees, portfolio, ledger)
+            # Peform selling
+            for k in range(len(sell_days)):
+                proc.sell(sell_days[k], i, stock_prices, fees, portfolio, ledger)
+        
+        # Sell all stock on final day
+        sell_all_stock(stock_prices, fees, portfolio, ledger)
+
 if __name__ == "__main__":
     stock_prices = data.get_data()
-    crossing_averages(stock_prices)
-    random(stock_prices)
+    momentum(stock_prices, osc_type ='stochastic')

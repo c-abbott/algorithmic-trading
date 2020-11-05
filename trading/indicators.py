@@ -45,13 +45,12 @@ def oscillator(stock_price, n=7, osc_type='stochastic'):
     # Reversing arrays for ease of iteration
     rev_stock_price = stock_price[::-1]
     rev_sample = rev_stock_price[:n]
-    n_eff = rev_sample.size
 
     # Storage
-    osc = np.zeros(shape=(n_eff, ))
+    osc = np.zeros(shape=(rev_stock_price.size, ))
 
     if osc_type == 'stochastic':
-        for i in range(n_eff):
+        for i in range(rev_stock_price.size):
             # Find low and high prices
             high_price = np.max(rev_stock_price[i:i+n])
             low_price = np.min(rev_stock_price[i:i+n])
@@ -70,7 +69,7 @@ def oscillator(stock_price, n=7, osc_type='stochastic'):
                 osc[i] = delta / delta_max
         return osc[::-1]
     
-    elif osc_type == 'RSI':
+    elif osc_type == 'RSI' or osc_type == 'rsi':
         # Calculating all price changes
         deltas = np.diff(stock_price)
         # Calculating RSI for first n days
