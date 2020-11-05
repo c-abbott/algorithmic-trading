@@ -155,25 +155,16 @@ def get_data(method='read', initial_price=None, volatility=None, FILE_NAME='stoc
     days = 365 * 5
 
     if method == 'generate':
-        #assert initial_price != None, "Please specify the initial price for each stock."
-        #assert volatility != None, "Please specify the volatility for each stock."
-        
         # Ensuring valid input
-        if initial_price != None and volatility == None:
-            print(f'Please specify the volatiliy for each stock.')
-            return None
-        elif initial_price == None and volatility != None:
-            print(f'Please specify the initial price for each stock.')
-            return None
-        
-        elif initial_price != None and volatility != None:
+        assert initial_price != None, "Please specify the initial price for each stock."
+        assert volatility != None, "Please specify the volatility for each stock."
+        if initial_price != None and volatility != None:
             # Defining number of stocks to simulate
             N = len(initial_price)
             sim_data = np.zeros([days, N])
-            
             # Populating array with randomly generated stock prices
             for i in range(N):
-                sim_data[:, i] = generate_stock_price(days, initial_price[i], volatility[i], seed=42)
+                sim_data[:, i] = generate_stock_price(days, initial_price[i], volatility[i])
             return sim_data
 
     
