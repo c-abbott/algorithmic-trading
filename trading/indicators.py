@@ -14,33 +14,19 @@ def moving_average(stock_price, n=7, weights=[]):
     Output:
         ma (ndarray): the n-day (possibly weighted) moving average of the share price over time.
     '''
-    # Reversing arrays for ease of iteration
-    rev_stock_price = stock_price[::-1]
-    rev_sample = rev_stock_price[:n]
-    n_eff = rev_sample.size
-    
-    # Storage
-    ma = np.zeros(shape=(n_eff, ))
-
-    if n > n_eff:
-        print(f'Warning: The first {n_eff} elements of the ma array returned are a ' + \
-                f'{n_eff}-day moving average and not a {n}-day moving average')
-
-    # Unweighted moving average
     if len(weights) == 0:
-        for i in range(n_eff):
-            ma[i] = np.mean(rev_stock_price[i:i+n])
-        return ma[::-1]
-    else:
+        # Equal weightinh
+        weights = np.repeat(1.0, n) / n
+        # 'valid' arg ensures that only an n-day MA is taken
+        ma = np.convolve(stock_price, weights, 'valid') 
+        return ma
+    elif len(weights) != 0:
         # Ensure valid input
         assert len(weights) == n, "Please provide a weight for every element in moving average calculation"
-
-        # Nomalize and reverse weights 
-        weights = np.array(weights)[::-1] / np.sum(weights)
-        # Calculate moving average
-        for i in range(n_eff):
-            ma[i] = np.mean(stock_price[::-1][i:i+n])  * weights[i]
-        return ma[::-1]
+        # Normalize weights
+        weights = np.array(weights) / np.sum(weights)
+        ma = np.convolve(stock_price, weights, 'valid')
+        return ma
 
 
 def oscillator(stock_price, n=7, osc_type='stochastic'):
@@ -85,36 +71,31 @@ def oscillator(stock_price, n=7, osc_type='stochastic'):
         return osc[::-1]
     
     elif osc_type == 'RSI':
-        price_diffs_arr = np.zeros(shape = (n_eff, n))
-        # Get price differences over past n days
-        for i in range(n_eff):
-            # Set osc to 0 for when we don't have enough data to calculate RSI
-            if rev_stock_price[i:i+n].size != rev_stock_price[i+1:i+1+n].size:
-                osc[i] = 0
+        # Calculating all price changes
+        deltas = np.diff(stock_price)
+        # Calculating RSI for first n days
+        seed = deltas[:n+1]
+        plus = seed[seed >= 0].sum() / n
+        neg = seed[seed < 0].sum() / n
+        rs = plus / neg
+        osc = np.zeros_like(stock_price)
+        osc[:n] = 1. - 1. / (1 + rs)
+
+        # Calculating RSI for rest of days
+        for i in range (n, stock_price.size):
+            # Get price change
+            delta = deltas[i-1]
+            # Get correct value to use for avg calculation
+            if delta > 0:
+                plusval = delta
+                negval = 0
             else:
-                # Get n-day price differences
-                price_diffs_arr[i, :] = rev_stock_price[i:i+n] - rev_stock_price[i+1:i+1+n]
-                # Find +ve and -ve price diffs and return RSI
-                plus_idxs = np.where(price_diffs_arr[i, :] > 0)[0] # Do not include 0 in RSI calculation
-                neg_idxs = np.where(price_diffs_arr[i, :] < 0)[0]
-                plus_avg = np.mean(price_diffs_arr[i, :][plus_idxs])
-                neg_avg = np.abs(np.mean(price_diffs_arr[i, :][neg_idxs]))
-                # Handle edge case where RS blows up so RSI tends to 1.0!
-                if neg_avg == 0:
-                    osc[i] = 1.0
-                else:
-                    RS = plus_avg / neg_avg
-                    RSI = -1/(1 + RS) + 1
-                    osc[i] = RSI
-        return osc[::-1]
-
-
-
-
-
-
-
-
-        
-
-        
+                plusval = 0
+                negval = -delta # Negate to get abs value
+            # Updating plus and neg average
+            plus = (plus * (n-1) + plusval) / n
+            neg = (neg * (n-1) + negval) / n
+            # Updating RSI
+            rs = plus / neg
+            osc[i] = 1. - 1. / (1 + rs)
+        return osc
