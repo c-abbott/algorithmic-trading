@@ -119,7 +119,7 @@ def get_idxs(items, file_vals):
         col_idxs.append(idx)
     return col_idxs
 
-def get_data(method='read', initial_price=None, volatility=None, FILE_NAME='stock_data_5y.txt'):
+def get_data(method='read', days=None, initial_price=None, volatility=None, FILE_NAME='stock_data_5y.txt'):
     '''
     Generates or reads simulation data for one or more stocks over 5 years,
     given their initial share price and volatility.
@@ -130,6 +130,8 @@ def get_data(method='read', initial_price=None, volatility=None, FILE_NAME='stoc
                 the data from scratch.
             If method is 'read', use Numpy's loadtxt() to read the data
                 from the file stock_data_5y.txt.
+        
+        days (int): The number of days to get data for.
             
         initial_price (list): list of initial prices for each stock (default None)
             If method is 'generate', use these initial prices to generate the data.
@@ -151,9 +153,6 @@ def get_data(method='read', initial_price=None, volatility=None, FILE_NAME='stoc
         sim_data (ndarray): NumPy array with N columns, containing the price data
             for the required N stocks each day over 5 years.
     '''
-    # Simulate for 5 years discounting leap years
-    days = 365 * 5
-
     if method == 'generate':
         # Ensuring valid input
         assert initial_price != None, "Please specify the initial price for each stock."

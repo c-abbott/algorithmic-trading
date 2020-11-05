@@ -1,8 +1,8 @@
 # Functions to implement our trading strategy.
 import numpy as np
-import process as proc
-import data
-import indicators as indi
+from trading import process as proc
+from trading import indicators as indi
+from trading import data as data
 
 def sell_all_stock(stock_prices, fees, portfolio, ledger):
     '''
@@ -181,4 +181,5 @@ def momentum(stock_prices, osc_type='RSI', mom_period=7, cooldown_period=7, amou
 
 if __name__ == "__main__":
     stock_prices = data.get_data()
-    momentum(stock_prices, osc_type ='stochastic')
+    #momentum(stock_prices, osc_type ='stochastic')
+    random(stock_prices)

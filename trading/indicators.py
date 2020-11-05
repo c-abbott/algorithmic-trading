@@ -44,8 +44,6 @@ def oscillator(stock_price, n=7, osc_type='stochastic'):
     '''
     # Reversing arrays for ease of iteration
     rev_stock_price = stock_price[::-1]
-    rev_sample = rev_stock_price[:n]
-
     # Storage
     osc = np.zeros(shape=(rev_stock_price.size, ))
 
