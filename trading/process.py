@@ -26,7 +26,7 @@ def log_transaction(transaction_type, date, stock, number_of_shares, price, fees
     if transaction_type == 'buy':
         delta_money  -= number_of_shares * price + fees
     elif transaction_type == 'sell':
-        delta_money += number_of_shares * price + fees
+        delta_money += number_of_shares * price - fees
 
     # Info to written to file
     transaction_info = [transaction_type, date, stock, number_of_shares, price, delta_money]
@@ -88,9 +88,12 @@ def sell(date, stock, stock_prices, fees, portfolio, ledger_file):
     price = stock_prices[int(date), int(stock)]
     # Sell all shares of stock and update portfolio
     number_of_shares = portfolio[stock]
-    portfolio[stock] = 0
-    # Log transaction
-    log_transaction('sell', date, stock, number_of_shares, price, fees, ledger_file)
+    # We can only sell the stock if we own it!
+    if number_of_shares != 0:
+        portfolio[stock] = 0
+        # Log transaction
+        log_transaction('sell', date, stock, number_of_shares, price, fees, ledger_file)
+
 
 
 def create_portfolio(available_amounts, stock_prices, fees, ledger_file):
