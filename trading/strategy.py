@@ -4,6 +4,24 @@ import process as proc
 import data
 import indicators as indi
 
+def sell_all_stock(stock_prices, fees, portfolio, ledger):
+    '''
+    Sell all stock on the final day.
+
+    Input:
+        stock_prices (ndarray): the stock price data
+        fees (float, default 20): transaction fees
+        portfolio (list): our current portfolio
+        ledger (str): path to the ledger file
+    
+    Output: None
+    '''
+    # Number of stocks simulated
+    N = int(stock_prices.shape[1])
+    # Finish with selling all stock on final day
+    for i in range(N):
+        proc.sell(stock_prices.shape[0]-1, i, stock_prices, fees, portfolio, ledger)
+
 def random(stock_prices, period=7, amount=5000, fees=20, ledger='ledger_random.txt'):
     '''
     Randomly decide, every period, which stocks to purchase,

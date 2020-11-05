@@ -15,7 +15,7 @@ def moving_average(stock_price, n=7, weights=[]):
         ma (ndarray): the n-day (possibly weighted) moving average of the share price over time.
     '''
     if len(weights) == 0:
-        # Equal weightinh
+        # Equal weighting and create window of size n
         weights = np.repeat(1.0, n) / n
         # 'valid' arg ensures that only an n-day MA is taken
         ma = np.convolve(stock_price, weights, 'valid') 
