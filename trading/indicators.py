@@ -1,13 +1,13 @@
 import numpy as np
 
-def moving_average(stock_price, n=7, weights=[]):
+def moving_average(stock_price, window_size=7, weights=[]):
     '''
     Calculates the n-day (possibly weighted) moving average for a given stock over time.
 
     Input:
         stock_price (ndarray): single column with the share prices over time for one stock,
             up to the current day.
-        n (int, default 7): period of the moving average (in days).
+        window_size (int, default 7): period of the moving average (in days).
         weights (list, default []): must be of length n if specified. Indicates the weights
             to use for the weighted average. If empty, return a non-weighted average.
 
@@ -16,13 +16,13 @@ def moving_average(stock_price, n=7, weights=[]):
     '''
     if len(weights) == 0:
         # Equal weighting and create window of size n
-        weights = np.repeat(1.0, n) / n
+        weights = np.repeat(1.0, window_size) / window_size
         # 'valid' arg ensures that only an n-day MA is taken
         ma = np.convolve(stock_price, weights, 'valid') 
         return ma
     elif len(weights) != 0:
         # Ensure valid input
-        assert len(weights) == n, "Please provide a weight for every element in moving average calculation"
+        assert len(weights) == window_size, "Please provide a weight for every element in moving average calculation"
         # Normalize weights
         weights = np.array(weights) / np.sum(weights)
         ma = np.convolve(stock_price, weights, 'valid')

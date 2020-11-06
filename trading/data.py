@@ -166,22 +166,22 @@ def get_data(method='read', days=None, initial_price=None, volatility=None, FILE
                 sim_data[:, i] = generate_stock_price(days, initial_price[i], volatility[i])
             return sim_data
 
-    
     elif method == 'read':
         # Locating relevant file
         BASE_PATH = path.dirname(__file__)
         FILE_PATH = path.abspath(path.join(BASE_PATH, "..", FILE_NAME))
 
         # Storing data from file in array
-        data_array = np.loadtxt(FILE_PATH)
+        all_data_array = np.loadtxt(FILE_PATH)
+        data_array = all_data_array[:days, :]
 
         # Storing the inital volatilities and inital prices
-        file_vols = data_array[0, :]
-        file_ips = data_array[1, :]
+        file_vols = all_data_array[0, :]
+        file_ips = all_data_array[1, :]
         
         # No arguments == return all data
-        if initial_price == None and volatility == None:
-            return data_array[1:]
+        if initial_price == None and volatility == None and days == None:
+            return all_data_array[1:]
 
         elif initial_price != None and volatility == None:
             # Defining number of stocks to simulate

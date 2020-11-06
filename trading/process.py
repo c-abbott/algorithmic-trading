@@ -62,12 +62,10 @@ def buy(date, stock, available_capital, stock_prices, fees, portfolio, ledger_fi
     '''
     # Retrieve stock price
     price = stock_prices[int(date), int(stock)]
-    # Buy as many shares as possible
-    number_of_shares = np.floor( (available_capital - fees) / price )
-    # Update portfolio
-    portfolio[stock] += number_of_shares
-    # Log transaction
-    log_transaction('buy', date, stock, number_of_shares, price, fees, ledger_file)
+    if price != np.nan:
+        number_of_shares = np.floor( (available_capital - fees) / price ) # Buy as many shares as possible
+        portfolio[stock] += number_of_shares # Update portfolio
+        log_transaction('buy', date, stock, number_of_shares, price, fees, ledger_file) # Log transaction
 
 def sell(date, stock, stock_prices, fees, portfolio, ledger_file):
     '''
@@ -93,8 +91,6 @@ def sell(date, stock, stock_prices, fees, portfolio, ledger_file):
         portfolio[stock] = 0
         # Log transaction
         log_transaction('sell', date, stock, number_of_shares, price, fees, ledger_file)
-
-
 
 def create_portfolio(available_amounts, stock_prices, fees, ledger_file):
     '''
