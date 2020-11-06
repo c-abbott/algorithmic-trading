@@ -24,6 +24,7 @@ def get_news_drifts(chance, volatility, rng, drift_time):
             determined int sampled between low and high provided
             by the drift_time variable.
     '''
+    # Simulate occurence of news event
     news_today = rng.choice([0, 1], p=[1 - chance, chance])
 
     if news_today:
@@ -31,7 +32,7 @@ def get_news_drifts(chance, volatility, rng, drift_time):
         m = rng.normal(loc=0, scale=2)
         drift = m * volatility
 
-        # Randomly choose the duration
+        # Randomly choose the duration of news effect
         duration = rng.integers(drift_time[0], drift_time[1])
 
         # Return drifts due to news event
@@ -179,9 +180,11 @@ def get_data(method='read', days=None, initial_price=None, volatility=None, FILE
 
         # Get data from relevant days
         data_array = all_data_array[:days+1, :]
+
         # Storing the inital volatilities and inital prices
         file_vols = all_data_array[0, :]
         file_ips = all_data_array[1, :]
+        
         if initial_price != None and volatility == None:
             # Defining number of stocks to simulate
             N = len(initial_price)

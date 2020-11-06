@@ -3,6 +3,7 @@ import numpy as np
 def moving_average(stock_price, window_size=7, weights=[]):
     '''
     Calculates the n-day (possibly weighted) moving average for a given stock over time.
+    Note that the moving average is only computed if the moving average calculation is valid.
 
     Input:
         stock_price (ndarray): single column with the share prices over time for one stock,
@@ -27,7 +28,6 @@ def moving_average(stock_price, window_size=7, weights=[]):
         weights = np.array(weights) / np.sum(weights)
         ma = np.convolve(stock_price, weights, 'valid')
         return ma
-
 
 def oscillator(stock_price, n=7, osc_type='stochastic'):
     '''
@@ -74,10 +74,15 @@ def oscillator(stock_price, n=7, osc_type='stochastic'):
         seed = deltas[:n+1]
         plus = seed[seed >= 0].sum() / n
         neg = seed[seed < 0].sum() / n
-        rs = plus / neg
         osc = np.zeros_like(stock_price)
-        osc[:n] = 1. - 1. / (1 + rs)
-
+        if plus == 0.:
+            osc[:n] = 0.
+        elif plus != 0. and neg == 0:
+            osc[:n] = 1.
+        else:
+            rs = plus / neg
+            osc[:n] = 1. - 1 / (1. + rs)
+            
         # Calculating RSI for rest of days
         for i in range (n, stock_price.size):
             # Get price change
@@ -92,7 +97,11 @@ def oscillator(stock_price, n=7, osc_type='stochastic'):
             # Updating plus and neg average
             plus = (plus * (n-1) + plusval) / n
             neg = (neg * (n-1) + negval) / n
-            # Updating RSI
-            rs = plus / neg
-            osc[i] = 1. - 1. / (1 + rs)
+            if plus == 0.:
+                osc[i] = 0.
+            elif plus != 0. and neg == 0:
+                osc[i] = 1.
+            else:
+                rs = plus / neg
+                osc[i] = 1. - 1 / (1. + rs)
         return osc

@@ -43,7 +43,7 @@ def random(stock_prices, period=7, amount=5000, fees=20, ledger='ledger_random.t
     # Create day 0 portfolio
     portfolio = proc.create_portfolio(np.repeat(amount, N), stock_prices, fees, ledger)
     # Determine dates on which we act
-    action_days = np.arange(0, stock_prices.shape[0], period)
+    action_days = np.arange(1, stock_prices.shape[0]+1, period)
 
     for action_day in action_days:
         for stock_id in range(N):
@@ -57,7 +57,7 @@ def random(stock_prices, period=7, amount=5000, fees=20, ledger='ledger_random.t
     # Finish with selling all stock on final day
     sell_all_stock(stock_prices, fees, portfolio, ledger)
 
-def crossing_averages(stock_prices, sma_period=200, fma_period=50, amount=5000, fees=20, ledger='ledger_cross.txt'):
+def crossing_averages(stock_prices, sma_window=200, fma_window=50, amount=5000, fees=20, ledger='ledger_cross.txt'):
     '''
     Algorithmic trading strategy based on the crossing of the slow moving average (SMA) and fast
     moving average (FMA).
@@ -78,28 +78,27 @@ def crossing_averages(stock_prices, sma_period=200, fma_period=50, amount=5000, 
     # Number of stocks simulated
     N = int(stock_prices.shape[1])
     # Create day 0 portfolio
-    portfolio = proc.create_portfolio(np.ones(N)*amount, stock_prices, fees, ledger)
+    portfolio = proc.create_portfolio(np.repeat(amount, N), stock_prices, fees, ledger)
 
-    assert fma_period < sma_period, "Your SMA period must be less than your FMA period"
-    for i in range(N):
+    assert fma_window < sma_window, "Your SMA period must be less than your FMA period"
+    for stock_id in range(N):
         # SMA calculated from day = sma_period
-        sma = indi.moving_average(stock_prices[:,i], window_size=sma_period) # size: N - sma_period
+        sma = indi.moving_average(stock_prices[:,stock_id], window_size=sma_window) # size: N - sma_period
         # FMA calculated from day = fma_period
-        fma = indi.moving_average(stock_prices[:,i], window_size=fma_period)[sma_period-fma_period:] # size: N - sma_period
+        fma = indi.moving_average(stock_prices[:,stock_id], window_size=fma_window)[sma_window-fma_window:] # size: N - sma_period
         # Comparison from day = sma_period - fma_period
         deltas = fma - sma 
         # Find buying and selling days
-        cross_days = np.where((np.diff(np.sign(deltas)) != 0))[0] + (sma_period - fma_period + 1)
+        cross_days = np.where((np.diff(np.sign(deltas)) != 0))[0] + 1
 
         for cross_day in cross_days:
-            if (fma[cross_day - 1] - sma[cross_day - 1]) > 0:
-                proc.sell(cross_day, i, stock_prices, fees, portfolio, ledger)
+            if (fma[cross_day - 1] > sma[cross_day - 1]):
+                proc.sell(cross_day + sma_window-1, stock_id, stock_prices, fees, portfolio, ledger)
             else:
-                proc.buy(cross_day, i, amount, stock_prices, fees, portfolio, ledger)
+                proc.buy(cross_day + sma_window-1, stock_id, amount, stock_prices, fees, portfolio, ledger)
 
     # Sell final day stock
     sell_all_stock(stock_prices, fees, portfolio, ledger)
-
 
 def momentum(stock_prices, osc_type='RSI', mom_period=7, cooldown_period=7, thresholds=(0.25, 0.75), amount=5000, fees=20, ledger='ledger_mom.txt'):
     '''
@@ -121,18 +120,26 @@ def momentum(stock_prices, osc_type='RSI', mom_period=7, cooldown_period=7, thre
     # Number of stocks simulated
     N = int(stock_prices.shape[1])
     # Create day 0 portfolio
-    portfolio = proc.create_portfolio(np.ones(N)*amount, stock_prices, fees, ledger)
+    portfolio = proc.create_portfolio(np.repeat(amount, N), stock_prices, fees, ledger)
 
     for stock_id in range(N):
+        # Get oscillator values
         oscillator = indi.oscillator(stock_prices[:, stock_id], n=mom_period, osc_type=osc_type)
+        # Set NaNs to 0
+        nans_locs = np.isnan(oscillator)
+        oscillator[nans_locs] = 0
+        # Find buy days and sell days
         buy_days = np.where(oscillator < thresholds[0])[0]
         sell_days = np.where(oscillator > thresholds[1])[0]
 
-        day = 1
+        # Oscillator values are only valid when day >= mom_period
+        day = mom_period 
+        
+        # Perform transactions with cooldown
         while day < len(stock_prices[:, stock_id]):
             if day in buy_days:
                 proc.buy(day, stock_id, amount, stock_prices, fees, portfolio, ledger)
-                day += cooldown_period
+                day += cooldown_period 
             elif day in sell_days:
                 proc.sell(day, stock_id, stock_prices, fees, portfolio, ledger)
                 day += cooldown_period
@@ -141,8 +148,11 @@ def momentum(stock_prices, osc_type='RSI', mom_period=7, cooldown_period=7, thre
         # Sell all stock on final day
         sell_all_stock(stock_prices, fees, portfolio, ledger)
 
-def apply_all_strats(stock_prices, amount, fees, n_ran, n_sma, n_fma, n_osc_stoch, n_osc_rsi, thresholds):
+def apply_all_strats(stock_prices, amount, fees, n_ran, sma_window, fma_window, stoch_period, rsi_period, thresholds, cooldown_period):
+    '''
+        Wrapper which calls all 4 strategy variants.
+    '''
     random(stock_prices, n_ran, amount, fees, ledger='ledger_ran.txt')
-    crossing_averages(stock_prices, n_sma, n_fma, amount, fees, ledger='ledger_cross.txt')
-    momentum(stock_prices, 'RSI', n_osc_rsi, 7, thresholds, amount, fees, ledger='ledger_rsi.txt')
-    momentum(stock_prices, 'stochastic', n_osc_stoch, 7, thresholds, amount, fees, ledger='ledger_stoch.txt')
+    crossing_averages(stock_prices, sma_window, fma_window, amount, fees, ledger='ledger_cross.txt')
+    momentum(stock_prices, 'RSI', rsi_period, cooldown_period, thresholds, amount, fees, ledger='ledger_rsi.txt')
+    momentum(stock_prices, 'stochastic', stoch_period, cooldown_period, thresholds, amount, fees, ledger='ledger_stoch.txt')
