@@ -1,5 +1,13 @@
 import numpy as np
 import csv
+import os
+
+def remove_files(ledgers):
+    for ledger in ledgers:
+        # Locating relevant file
+        BASE_PATH = os.path.dirname(__file__)
+        FILE_PATH = os.path.abspath(os.path.join(BASE_PATH, "..",ledger))
+        os.remove(FILE_PATH)
 
 # Functions to process transactions.
 def log_transaction(transaction_type, date, stock, number_of_shares, price, fees, ledger_file):
