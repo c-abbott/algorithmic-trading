@@ -112,7 +112,6 @@ def create_portfolio(available_amounts, stock_prices, fees, ledger_file):
     # Create portfolio
     portfolio = np.zeros(N).tolist()
     # Populating day 0 portfolio
-    for i in range(N):
-        # iterator i represents the stock to buy
-        buy(date, i, available_amounts[i], stock_prices, fees, portfolio, ledger_file)
+    for stock_id in range(N):
+        buy(date, stock_id, available_amounts[stock_id], stock_prices, fees, portfolio, ledger_file)
     return portfolio

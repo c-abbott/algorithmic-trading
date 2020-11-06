@@ -19,8 +19,8 @@ def sell_all_stock(stock_prices, fees, portfolio, ledger):
     # Number of stocks simulated
     N = int(stock_prices.shape[1])
     # Finish with selling all stock on final day
-    for i in range(N):
-        proc.sell(stock_prices.shape[0]-1, i, stock_prices, fees, portfolio, ledger)
+    for stock_id in range(N):
+        proc.sell(stock_prices.shape[0]-1, stock_id, stock_prices, fees, portfolio, ledger)
 
 def random(stock_prices, period=7, amount=5000, fees=20, ledger='ledger_random.txt'):
     '''
@@ -41,12 +41,11 @@ def random(stock_prices, period=7, amount=5000, fees=20, ledger='ledger_random.t
     # Number of stock to simulate
     N = int(stock_prices.shape[1])
     # Create day 0 portfolio
-    portfolio = proc.create_portfolio(np.ones(N)*amount, stock_prices, fees, ledger)
+    portfolio = proc.create_portfolio(np.repeat(amount, N), stock_prices, fees, ledger)
     # Determine dates on which we act
     action_days = np.arange(0, stock_prices.shape[0], period)
-    # Loop over all actions
+
     for action_day in action_days:
-        # Loop over action for each stock
         for stock_id in range(N):
             # Randomly sample action from discrete unif dist.
             action = np.random.choice([0, 1, 2])
@@ -54,6 +53,7 @@ def random(stock_prices, period=7, amount=5000, fees=20, ledger='ledger_random.t
                 proc.buy(action_day, stock_id, amount, stock_prices, fees, portfolio, ledger)
             elif action == 2: # Selling
                 proc.sell(action_day, stock_id, stock_prices, fees, portfolio, ledger)
+
     # Finish with selling all stock on final day
     sell_all_stock(stock_prices, fees, portfolio, ledger)
 
@@ -122,7 +122,6 @@ def momentum(stock_prices, osc_type='RSI', mom_period=7, cooldown_period=7, thre
     N = int(stock_prices.shape[1])
     # Create day 0 portfolio
     portfolio = proc.create_portfolio(np.ones(N)*amount, stock_prices, fees, ledger)
-
 
     for stock_id in range(N):
         oscillator = indi.oscillator(stock_prices[:, stock_id], n=mom_period, osc_type=osc_type)
