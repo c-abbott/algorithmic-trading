@@ -87,6 +87,8 @@ def plot_net_capital(days):
         axes[positions[strat]].plot(days, cum_sum, color = 'black', label = 'Net Capital')
         axes[positions[strat]].fill_between(x=days, y1=np.zeros_like(days), y2=cum_sum, where=cum_sum <= 0, facecolor = "red")
         axes[positions[strat]].fill_between(x=days, y1=np.zeros_like(days), y2=cum_sum, where=cum_sum > 0, facecolor = "green")
+     
+    plt.savefig('capital.png')
 
 
 def plot_indicators(stock_price, days, sma_window, fma_window, rsi_period, stoch_period):
@@ -129,3 +131,4 @@ def plot_indicators(stock_price, days, sma_window, fma_window, rsi_period, stoch
     axes[1].plot(days, rsis, 'r-', label = f'{rsi_period}-day RSI')
     axes[1].plot(days, stochs, 'b-', label=f'{stoch_period}-day Stochastic')
     axes[1].legend()
+    plt.savefig('indicators.png')
